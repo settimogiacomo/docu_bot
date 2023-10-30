@@ -14,6 +14,7 @@ class ElencoFileCaricati {
 }
 
 List<String> _messaggiChat = []; // Dichiarazione della lista _messaggiChat
+const double FONTSIZE = 13.5;
 
 void main() {
   runApp(const MyApp());
@@ -73,9 +74,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
                   const SizedBox(height: 20),
-                  LabelDropDown(etichetta: "Lingua", lista: 0, valoreDefault: 'Item 1', icona: Icons.flag),
+                  LabelDropDown(etichetta: "Lingua", lista: <String>["Italiano", "Inglese", "Spagnolo", "Tedesco"], valoreDefault: 'Italiano', icona: Icons.flag),
                   const SizedBox(height: 20),
-                  LabelDropDown(etichetta: "Modello", lista: 1, valoreDefault: 'Item 2', icona: Icons.mode_fan_off_rounded),
+                  LabelDropDown(etichetta: "Modello", lista: <String>["google/flan-t5-xxl", "google/flan-t5-large", "tiiuae/falcon-7b-instruct"], valoreDefault: 'google/flan-t5-xxl', icona: Icons.mode_fan_off_rounded),
                   const SizedBox(height: 80), // Spazio tra il tuo bottone e l'elenco dei file
 
                   Row(
@@ -83,7 +84,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     children: [
                       Icon(Icons.attach_file), // Icona "allega file"
                       const SizedBox(width: 8),
-                      Text('Carica'), // Testo "Carica"
+                      Text('Carica', style: TextStyle(fontSize: FONTSIZE) ), // Testo "Carica"
                       const SizedBox(width: 8),
                       ElevatedButton(
                         onPressed: _pickFile,
@@ -97,14 +98,15 @@ class _MyHomePageState extends State<MyHomePage> {
                       margin: const EdgeInsets.only(left: 50, right: 50, bottom: 50), // Margine esterno di 50 pixel a sinistra, a destra e in basso
                       padding: const EdgeInsets.all(10), // Padding interno di 10 pixel
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.black), // Bordo nero
+                        border: Border.all(color: Colors.black38), // Bordo nero
+                        borderRadius: BorderRadius.circular(15)
                       ),
                       child: ListView.builder(
                         itemCount: _elencoFileCaricati.numeroFileCaricati, // Usa la lunghezza dell'elenco
                         itemBuilder: (context, index) {
                           return ListTile(
                             leading: Icon(Icons.insert_drive_file),
-                            title: Text(_elencoFileCaricati.elencoCompleto[index]), // Ottieni il nome del file dall'elenco
+                            title: Text(_elencoFileCaricati.elencoCompleto[index], style: TextStyle(fontSize: FONTSIZE)), // Ottieni il nome del file dall'elenco
                           );
                         },
                       ),
@@ -134,7 +136,13 @@ class SchermataChat extends StatefulWidget {
 }
 
 class _StatoSchermataChat extends State<SchermataChat> {
-  final TextEditingController _controllerTesto = TextEditingController();
+  final TextEditingController _controllerTesto = TextEditingController(text: "");
+
+  @override
+  void dispose() {
+    _controllerTesto.dispose();
+    super.dispose();
+  }
 
   void _gestisciMessaggioInviato(String messaggio) {
     if (messaggio.isNotEmpty) {
@@ -148,9 +156,10 @@ class _StatoSchermataChat extends State<SchermataChat> {
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          color: Colors.grey,
+          color: Colors.black26,
           child: Padding(
             padding: const EdgeInsets.all(15),
             child: Align(
@@ -160,15 +169,20 @@ class _StatoSchermataChat extends State<SchermataChat> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(15),
                 ),
-                height: 620,
+                height: MediaQuery.of(context).size.height - 30,
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     // Top part with "Chat" text
-                    const Text(
-                      "Chat With Documents",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    const Padding(
+                      padding: EdgeInsets.only(top:10),
+                      child: Text(
+                        "Chat With Documents",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: FONTSIZE+5.0, fontWeight: FontWeight.bold),
+                      ),
                     ),
                     // Messaggi della chat
                     Expanded(
@@ -176,57 +190,62 @@ class _StatoSchermataChat extends State<SchermataChat> {
                         itemCount: _messaggiChat.length,
                         itemBuilder: (context, index) {
                           return ListTile(
-                            title: Text(_messaggiChat[index]),
+                            title: Text(_messaggiChat[index], style: TextStyle(fontSize: FONTSIZE)),
                           );
                         },
                       ),
                     ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: Container(
-                            margin: const EdgeInsets.only(left: 10), // Spazio a sinistra
-                            child: TextField(
-                              decoration: InputDecoration(
-                                hintText: "Inserisci la tua domanda",
-                                fillColor: Colors.white,
-                                filled: true,
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.green),
-                                  borderRadius: BorderRadius.circular(10),
+                    Padding(
+                      padding: EdgeInsets.only(bottom:10),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: Container(
+                              margin: const EdgeInsets.only(left: 10), // Spazio a sinistra
+                              child: TextField(
+                                controller: _controllerTesto,
+                                decoration: InputDecoration(
+                                  hintText: "Scrivi una domanda",
+                                  fillColor: Colors.white,
+                                  filled: true,
+                                  border: OutlineInputBorder(
+                                    borderSide: BorderSide(color: Colors.green),
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10), // Spazio interno
                                 ),
-                                contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10), // Spazio interno
+                                onSubmitted: _gestisciMessaggioInviato,
                               ),
-                              onSubmitted: _gestisciMessaggioInviato,
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 10), // Spazio tra l'input box e le icone
-                        ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(primary: Colors.green),
-                          onPressed: () {
-                            setState(() {
-                              _gestisciMessaggioInviato(_controllerTesto.text);
-                            });
-                          },
-                          icon: const Icon(Icons.send),
-                          label: const Text("Invia"),
-                        ),
-                        const SizedBox(width: 10), // Spazio tra le icone
-                        ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(primary: Colors.red),
-                          onPressed: () {
-                            setState(() {
-                              _messaggiChat.clear(); // Cancella tutti i messaggi
-                            });
-                          },
-                          icon: const Icon(Icons.delete),
-                          label: const Text("Svuota Chat"),
-                        ),
-                        const SizedBox(width: 10), // Spazio tra le icone
-                      ],
+                          const SizedBox(width: 10), // Spazio tra l'input box e le icone
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(primary: Colors.green),
+                            onPressed: () {
+                              setState(() {
+                                _gestisciMessaggioInviato(_controllerTesto.text);
+                              });
+                            },
+                            icon: const Icon(Icons.send),
+                            label: const Text("Invia"),
+                          ),
+                          const SizedBox(width: 10), // Spazio tra le icone
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(primary: Colors.red),
+                            onPressed: () {
+                              setState(() {
+                                _messaggiChat.clear(); // Cancella tutti i messaggi
+                                _controllerTesto.clear();
+                              });
+                            },
+                            icon: const Icon(Icons.delete),
+                            label: const Text("Svuota Chat"),
+                          ),
+                          const SizedBox(width: 10), // Spazio tra le icone
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -241,7 +260,7 @@ class _StatoSchermataChat extends State<SchermataChat> {
 
 class LabelDropDown extends StatefulWidget {
   final String etichetta;
-  final int lista;
+  final List<String> lista;
   String valoreDefault;
   final IconData icona;
 
@@ -265,22 +284,23 @@ class _LabelDropDownState extends State<LabelDropDown> {
           children: <Widget>[
             Icon(widget.icona),
             const SizedBox(width: 8),
-            Text(widget.etichetta),
+            Text(widget.etichetta, style: TextStyle(fontSize: FONTSIZE)),
           ],
         ),
         const SizedBox(width: 5),
         DecoratedBox(
           decoration: BoxDecoration(
             color: Colors.white,
-            border: Border.all(color: Colors.black38, width: 2),
-            borderRadius: BorderRadius.circular(50),
+            border: Border.all(color: Colors.black38, width: 1),
+            borderRadius: BorderRadius.circular(15),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(5), // Aggiungi spazio intorno alle Dropdown
+            padding: const EdgeInsets.all(0.5), // Aggiungi spazio intorno alle Dropdown
             child: Container(
-              width: 150,
+              width: 230,
               child: DropdownButton<String>(
                 underline: Container(),
+                isDense: true,
                 value: widget.valoreDefault,
                 onChanged: (String? newValue) {
                   setState(() {
@@ -290,14 +310,13 @@ class _LabelDropDownState extends State<LabelDropDown> {
                 isExpanded: true,
                 style: const TextStyle(
                   color: Colors.black,
-                  fontSize: 16,
+                  fontSize: FONTSIZE,
                 ),
-                items: <String>['Item 1', 'Item 2', 'Item 3', 'Item 4']
-                    .map<DropdownMenuItem<String>>((String value) {
+                items: widget.lista.map<DropdownMenuItem<String>>((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
                     child: Center(
-                      child: Text(value),
+                      child: Text(value, style: TextStyle(fontSize: FONTSIZE)),
                     ),
                   );
                 }).toList(),
