@@ -1,9 +1,9 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
-import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'costanti.dart';
 
 
 class ElencoFileCaricati {
@@ -20,6 +20,8 @@ class ElencoFileCaricati {
 
 List<String> _messaggiChat = [];
 const double FONTSIZE = 13.5;
+var _lingua = 'Italiano';
+var _nomeModello = 'google/flan-t5-xxl';
 
 void main() {
   runApp(const MyApp());
@@ -78,9 +80,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
                   const SizedBox(height: 20),
-                  LabelDropDown(etichetta: "Lingua", lista: <String>["Italiano", "Inglese", "Spagnolo", "Tedesco"], valoreDefault: 'Italiano', icona: Icons.flag),
+                  LabelDropDown(etichetta: "Lingua", lista: <String>["Italiano", "Inglese", "Spagnolo", "Tedesco"], valoreDefault: _lingua, icona: Icons.flag),
                   const SizedBox(height: 20),
-                  LabelDropDown(etichetta: "Modello", lista: <String>["google/flan-t5-xxl", "google/flan-t5-large", "tiiuae/falcon-7b-instruct"], valoreDefault: 'google/flan-t5-xxl', icona: Icons.mode_fan_off_rounded),
+                  LabelDropDown(etichetta: "Modello", lista: <String>["google/flan-t5-xxl", "google/flan-t5-large", "tiiuae/falcon-7b-instruct"], valoreDefault: _nomeModello, icona: Icons.mode_fan_off_rounded),
                   const SizedBox(height: 80),
 
                   Row(
@@ -142,7 +144,7 @@ class SchermataChat extends StatefulWidget {
 }
 
 const IconData userIcon = Icons.account_circle_rounded;
-const IconData responseIcon = Icons.adb;
+const IconData botIcon = Icons.adb;
 
 class _StatoSchermataChat extends State<SchermataChat> {
   final TextEditingController _controllerTesto = TextEditingController(text: "");
@@ -156,7 +158,7 @@ class _StatoSchermataChat extends State<SchermataChat> {
 
   Future<void> _inviaEMostraRisposta(String messaggio) async {
     // Invia messaggio all'API
-    final risposta  = await _richiediRispostaDallApi(messaggio);
+    final risposta  = await ottieniRisposta(messaggio);
 
     // Aggiorna la chat con il messaggio inviato
     setState(() {
@@ -167,61 +169,75 @@ class _StatoSchermataChat extends State<SchermataChat> {
       _messaggiChat.add(risposta);
       _controllerTesto.clear();
     });
-    // Attendi la risposta dall'API e aggiorna la chat con la risposta
-    //final risposta = await _richiediRispostaDallApi();
-    //setState(() {
-    //  _messaggiChat.add(risposta);
-    //});
   }
 
-  Future<void> _inviaMessaggioAllApi(String messaggio) async {
-    var url = 'http://localhost:8080/question'; // Sostituisci con l'URL del tuo server
-
+  Future<String> cambiaLingua() async {
     try {
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json', // Specifica il tipo di contenuto come JSON
-        },
-        body: jsonEncode({
-          'messaggio': messaggio,
-        }),
-      );
-
-      if (response.statusCode != 200) {
-        print('Errore durante l\'invio del messaggio. Codice: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Errore durante la richiesta HTTP: $e');
-    }
-  }
-
-
-  Future<String> _richiediRispostaDallApi(String domanda) async {
-    if (Uri == null){
-      return 'Uri null';
-    }
-    //try {
-      var url = Uri.parse('http://localhost:8080/question/$domanda'); // Sostituisci con l'URL del tuo server
+      var url = Uri.parse('$SERVER/lingua');
       print(url);
-      var response = await http.get(url, headers: {
-        "Access-Control-Allow-Origin": "*",
-        'Content-Type': 'application/json',
-        'Accept': '*/*'
-      }); //, headers: {'Content-Type': 'application/json'});
+      Map data = {'lingua_scelta' : _lingua};
+      var corpo = json.encode(data);
+      http.Response response = await http.post(url, headers: {'Content-Type': 'application/json'}, body: corpo);
 
       if (response.statusCode == 200) {
         var decodedResponse = json.decode(response.body);
         // Assume che la risposta JSON contenga un campo specifico, ad esempio "risposta"
-        final risposta = decodedResponse['question'];
+        final risposta = decodedResponse['response'];
 
-        return 'Risposta ricevuta: $risposta';
+        return risposta;
       } else {
         return 'Errore durante la richiesta di risposta. Codice: ${response.statusCode}';
       }
-    //} catch (e) {
-    //  return 'Errore durante la richiesta HTTP: $e';
-    //}
+    } catch (e) {
+      print('Errore durante la richiesta HTTP: $e');
+      return 'Errore durante la richiesta HTTP: $e';
+    }
+  }
+
+  Future<String> cambiaModello() async {
+    try {
+      var url = Uri.parse('$SERVER/modello');
+
+      Map data = {'modello_scelto' : _nomeModello};
+      var corpo = json.encode(data);
+      http.Response response = await http.post(url, headers: {'Content-Type': 'application/json'}, body: corpo);
+
+      if (response.statusCode == 200) {
+        var decodedResponse = json.decode(response.body);
+        // Assume che la risposta JSON contenga un campo specifico, ad esempio "risposta"
+        final risposta = decodedResponse['response'];
+
+        return risposta;
+      } else {
+        return 'Errore durante la richiesta di risposta. Codice: ${response.statusCode}';
+      }
+    } catch (e) {
+      print('Errore durante la richiesta HTTP: $e');
+      return 'Errore durante la richiesta HTTP: $e';
+    }
+  }
+
+  Future<String> ottieniRisposta(String domanda) async {
+    try {
+      //Uri url = Uri.parse('https://dummyjson.com/todos');//http://localhost:8080/question/$domanda'); // Sostituisci con l'URL del tuo server
+      var url = Uri.parse('$SERVER/question');
+      print(url);
+      Map data = {'domanda':domanda};
+      var corpo = json.encode(data);
+      http.Response response = await http.post(url, headers: {'Content-Type': 'application/json'}, body: corpo);
+
+      if (response.statusCode == 200) {
+        var decodedResponse = json.decode(response.body);
+        // Assume che la risposta JSON contenga un campo specifico, ad esempio "risposta"
+        final risposta = decodedResponse['response'];
+
+        return risposta;
+      } else {
+        return 'Errore durante la richiesta di risposta. Codice: ${response.statusCode}';
+      }
+    } catch (e) {
+      return 'Errore durante la richiesta HTTP: $e';
+    }
   }
 
 
@@ -267,11 +283,21 @@ class _StatoSchermataChat extends State<SchermataChat> {
                                 mainAxisAlignment: isMessaggioUtente ? MainAxisAlignment.end : MainAxisAlignment.start,
                                 children: [
                                   // Usa l'icona dell'utente per il messaggio dell'utente
-                                  Icon(isMessaggioUtente ? userIcon : responseIcon),
+                                  Visibility(
+                                    visible: !isMessaggioUtente,
+                                    child: Icon(botIcon),
+                                  ),
                                   SizedBox(width: 8), // Adjust the spacing between icon and text
-                                  Text(
-                                    _messaggiChat[index],
-                                    style: TextStyle(fontSize: FONTSIZE),
+                                  Flexible(
+                                      child:
+                                      SelectableText(
+                                          _messaggiChat[index],
+                                          style: TextStyle(fontSize: FONTSIZE),
+                                        ),
+                                  ),
+                                  Visibility(
+                                    visible: isMessaggioUtente,
+                                    child: Icon(userIcon),
                                   ),
                                 ],
                               ),
