@@ -1,9 +1,12 @@
+
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'costanti.dart';
+import 'request.dart';
 
 
 class ElencoFileCaricati {
@@ -17,8 +20,9 @@ class ElencoFileCaricati {
   int get contaFileCaricati => _fileCaricati.length;
 }
 
+
+final TextEditingController _controllerTesto = TextEditingController(text: "");
 List<String> _messaggiChat = [];
-const double FONTSIZE = 14;
 var _lingua = 'Italiano';
 var _nomeModello = 'google/flan-t5-xxl';
 
@@ -170,11 +174,48 @@ class SchermataChat extends StatefulWidget {
   _StatoSchermataChat createState() => _StatoSchermataChat();
 }
 
-const IconData userIcon = Icons.account_circle_rounded;
-const IconData botIcon = Icons.adb;
-
 class _StatoSchermataChat extends State<SchermataChat> {
-  final TextEditingController _controllerTesto = TextEditingController(text: "");
+  SpeechToText _speechToText = SpeechToText();
+  bool _speechEnabled = false;
+  bool _isListening = false;
+  String _ultimeParole = '';
+
+
+  void _initSpeech() async{
+    print("INIZIALIZZAZIONE");
+    _speechEnabled = await _speechToText.initialize();
+    print(_speechEnabled);
+    setState(() {});
+  }
+
+  void _salvaParoleSpeech(SpeechRecognitionResult risultato){
+    print(risultato.recognizedWords);
+    _ultimeParole = risultato.recognizedWords;
+    setState(() {
+      _controllerTesto.value = TextEditingValue(
+        text: _ultimeParole,
+        selection: TextSelection.fromPosition(
+            TextPosition(offset: _ultimeParole.length)
+        ),
+      );
+    });
+  }
+  void _inizioAscolto() async {
+    if(!_speechEnabled){
+      _speechEnabled = await _speechToText.initialize();
+    }
+    _ultimeParole = '';
+    await _speechToText.listen(
+        pauseFor: const Duration(seconds: 30),
+        cancelOnError: true,
+        onResult: _salvaParoleSpeech);
+    setState(() {});
+  }
+  void _fineAscolto() async {
+    await _speechToText.stop();
+    _speechEnabled = false;
+    setState(() {});
+  }
 
   void _gestisciMessaggioInviato(String messaggio) {
     if (messaggio.isNotEmpty) {
@@ -184,6 +225,16 @@ class _StatoSchermataChat extends State<SchermataChat> {
   }
 
   Future<void> _inviaEMostraRisposta(String messaggio) async {
+    //Inserisce la domanda dell'utente nel quadrante
+    setState(() {
+      _messaggiChat.add(messaggio);
+      _controllerTesto.clear();
+    });
+    // Feedback immediato di risposta
+    setState(() {
+      _messaggiChat.add("...");
+    });
+
     // Invia messaggio all'API
     // Inserisce messaggio utente
     final risposta  = await ottieniRisposta(messaggio);
@@ -193,85 +244,6 @@ class _StatoSchermataChat extends State<SchermataChat> {
       _messaggiChat[_messaggiChat.length-1] = risposta;
     });
   }
-
-  Future<String> cambiaLingua() async {
-    try {
-      var url = Uri.parse('$SERVER/lingua');
-      print(url);
-      Map data = {'lingua_scelta' : _lingua};
-      var corpo = json.encode(data);
-      http.Response response = await http.post(url, headers: {'Content-Type': 'application/json'}, body: corpo);
-
-      if (response.statusCode == 200) {
-        var decodedResponse = json.decode(response.body);
-        // Assume che la risposta JSON contenga un campo specifico, ad esempio "risposta"
-        final risposta = decodedResponse['response'];
-
-        return risposta;
-      } else {
-        return 'Errore durante la richiesta di risposta. Codice: ${response.statusCode}';
-      }
-    } catch (e) {
-      print('Errore durante la richiesta HTTP: $e');
-      return 'Errore durante la richiesta HTTP: $e';
-    }
-  }
-
-  Future<String> cambiaModello() async {
-    try {
-      var url = Uri.parse('$SERVER/modello');
-
-      Map data = {'modello_scelto' : _nomeModello};
-      var corpo = json.encode(data);
-      http.Response response = await http.post(url, headers: {'Content-Type': 'application/json'}, body: corpo);
-
-      if (response.statusCode == 200) {
-        var decodedResponse = json.decode(response.body);
-        // Assume che la risposta JSON contenga un campo specifico, ad esempio "risposta"
-        final risposta = decodedResponse['response'];
-
-        return risposta;
-      } else {
-        return 'Errore durante la richiesta di risposta. Codice: ${response.statusCode}';
-      }
-    } catch (e) {
-      print('Errore durante la richiesta HTTP: $e');
-      return 'Errore durante la richiesta HTTP: $e';
-    }
-  }
-
-  Future<String> ottieniRisposta(String domanda) async {
-    //Inserisce la domanda dell'utente nel quadrante
-    setState(() {
-      _messaggiChat.add(domanda);
-      _controllerTesto.clear();
-    });
-    // Feedback immediato di risposta
-    setState(() {
-      _messaggiChat.add("...");
-    });
-    try {
-      //Uri url = Uri.parse('https://dummyjson.com/todos');//http://localhost:8080/question/$domanda'); // Sostituisci con l'URL del tuo server
-      var url = Uri.parse('$SERVER/question');
-      print(url);
-      Map data = {'domanda':domanda};
-      var corpo = json.encode(data);
-      http.Response response = await http.post(url, headers: {'Content-Type': 'application/json'}, body: corpo);
-
-      if (response.statusCode == 200) {
-        var decodedResponse = json.decode(response.body);
-        // Assume che la risposta JSON contenga un campo specifico, ad esempio "risposta"
-        final risposta = decodedResponse['response'];
-
-        return risposta;
-      } else {
-        return 'Errore durante la richiesta di risposta. Codice: ${response.statusCode}';
-      }
-    } catch (e) {
-      return 'Errore durante la richiesta HTTP: $e';
-    }
-  }
-
 
   @override
   Widget build(BuildContext context) {
@@ -317,7 +289,7 @@ class _StatoSchermataChat extends State<SchermataChat> {
                                   // Usa l'icona dell'utente per il messaggio dell'utente
                                   Visibility(
                                     visible: !isMessaggioUtente,
-                                    child: Icon(botIcon),
+                                    child: Icon(BOT__ICON),
                                   ),
                                   SizedBox(width: 8), // Adjust the spacing between icon and text
                                   Flexible(
@@ -329,7 +301,7 @@ class _StatoSchermataChat extends State<SchermataChat> {
                                   ),
                                   Visibility(
                                     visible: isMessaggioUtente,
-                                    child: Icon(userIcon),
+                                    child: Icon(USER_ICON),
                                   ),
                                 ],
                               ),
@@ -362,6 +334,24 @@ class _StatoSchermataChat extends State<SchermataChat> {
                                 onSubmitted: _gestisciMessaggioInviato,
                               ),
                             ),
+                          ),
+                          const SizedBox(width: 10),
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.lightBlueAccent, shape: StadiumBorder()),
+                            onPressed: () {
+                              setState(() {
+                                print("Starting: state listening  " + _isListening.toString());
+                                if(_isListening){
+                                  _fineAscolto();
+                                  _isListening = false;
+                                } else {
+                                  _inizioAscolto();
+                                  _isListening = true;
+                                }
+                              });
+                            },
+                            icon: const Icon(Icons.mic),
+                            label: const Text(""),
                           ),
                           const SizedBox(width: 10),
                           ElevatedButton.icon(
