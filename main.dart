@@ -14,12 +14,11 @@ class ElencoFileCaricati {
   }
 
   List<String> get elencoCompleto => _fileCaricati;
-
-  int get numeroFileCaricati => _fileCaricati.length;
+  int get contaFileCaricati => _fileCaricati.length;
 }
 
 List<String> _messaggiChat = [];
-const double FONTSIZE = 13.5;
+const double FONTSIZE = 14;
 var _lingua = 'Italiano';
 var _nomeModello = 'google/flan-t5-xxl';
 
@@ -38,7 +37,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'DocuBot Home Page'),
+      home: const MyHomePage(title: 'DocuBot'),
     );
   }
 }
@@ -52,7 +51,10 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+
   final ElencoFileCaricati _elencoFileCaricati = ElencoFileCaricati();
+  var _hasContent = false;
+  var _fileSelezionato = -1;
 
   void _pickFile() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
@@ -65,6 +67,7 @@ class _MyHomePageState extends State<MyHomePage> {
     } else {
       // L'utente ha annullato la selezione del file
     }
+    _hasContent = (_elencoFileCaricati.contaFileCaricati > 0);
   }
 
   @override
@@ -76,51 +79,75 @@ class _MyHomePageState extends State<MyHomePage> {
             flex: 1,
             child: Container(
               color: Colors.white70,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: <Widget>[
-                  const SizedBox(height: 20),
-                  LabelDropDown(etichetta: "Lingua", lista: <String>["Italiano", "Inglese", "Spagnolo", "Tedesco"], valoreDefault: _lingua, icona: Icons.flag),
-                  const SizedBox(height: 20),
-                  LabelDropDown(etichetta: "Modello", lista: <String>["google/flan-t5-xxl", "google/flan-t5-large", "tiiuae/falcon-7b-instruct"], valoreDefault: _nomeModello, icona: Icons.mode_fan_off_rounded),
-                  const SizedBox(height: 80),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.attach_file),
-                      const SizedBox(width: 8),
-                      Text('Carica', style: TextStyle(fontSize: FONTSIZE)),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: _pickFile,
-                        child: const Text('Carica un file'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Expanded(
-                    child: Container(
-                      margin: const EdgeInsets.only(left: 50, right: 50, bottom: 50),
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.black38),
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: ListView.builder(
-                        itemCount: _elencoFileCaricati.numeroFileCaricati,
-                        itemBuilder: (context, index) {
-                          return Align(
-                            alignment: Alignment.topRight,
-                            child: ListTile(
-                              title: Text(_elencoFileCaricati.elencoCompleto[index], style: TextStyle(fontSize: FONTSIZE)),
-                            ),
-                          );
-                        },
+              child: Padding(
+                padding: const EdgeInsets.all(15.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    const SizedBox(height: 20),
+                    Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          LabelDropDown(etichetta: "Lingua", lista: <String>["Italiano", "Inglese", "Spagnolo", "Tedesco"], valoreDefault: _lingua, icona: Icons.flag),
+                        ]
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        LabelDropDown(etichetta: "Modello", lista: <String>["google/flan-t5-xxl", "google/flan-t5-large", "tiiuae/falcon-7b-instruct"], valoreDefault: _nomeModello, icona: Icons.mode_fan_off_rounded),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Icon(Icons.attach_file),
+                        const SizedBox(width: 8),
+                        Text('Carica', style: TextStyle(fontSize: FONTSIZE)),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent, shape: StadiumBorder()),
+                          onPressed: _pickFile,
+                          child: const Text('Carica un file'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Visibility(
+                      visible: _hasContent,
+                      child: Expanded(
+                        child: Container(
+                          margin: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.black38),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: ListView.builder(
+                            itemCount: _elencoFileCaricati.contaFileCaricati,
+                            itemBuilder: (context, index) {
+                              return Align(
+                                alignment: Alignment.topRight,
+                                child: ListTile(
+                                  title: Text(_elencoFileCaricati.elencoCompleto[index],
+                                      style: TextStyle(fontSize: FONTSIZE)
+                                  ),
+                                  tileColor: _fileSelezionato == index ? Colors.blue : null,
+                                  onTap: () {
+                                    setState(() {
+                                      _fileSelezionato = index;
+                                    });
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -158,16 +185,12 @@ class _StatoSchermataChat extends State<SchermataChat> {
 
   Future<void> _inviaEMostraRisposta(String messaggio) async {
     // Invia messaggio all'API
+    // Inserisce messaggio utente
     final risposta  = await ottieniRisposta(messaggio);
 
-    // Aggiorna la chat con il messaggio inviato
+    // Aggiorna la chat con la risposta
     setState(() {
-      _messaggiChat.add(messaggio);
-      _controllerTesto.clear();
-    });
-    setState(() {
-      _messaggiChat.add(risposta);
-      _controllerTesto.clear();
+      _messaggiChat[_messaggiChat.length-1] = risposta;
     });
   }
 
@@ -218,6 +241,15 @@ class _StatoSchermataChat extends State<SchermataChat> {
   }
 
   Future<String> ottieniRisposta(String domanda) async {
+    //Inserisce la domanda dell'utente nel quadrante
+    setState(() {
+      _messaggiChat.add(domanda);
+      _controllerTesto.clear();
+    });
+    // Feedback immediato di risposta
+    setState(() {
+      _messaggiChat.add("...");
+    });
     try {
       //Uri url = Uri.parse('https://dummyjson.com/todos');//http://localhost:8080/question/$domanda'); // Sostituisci con l'URL del tuo server
       var url = Uri.parse('$SERVER/question');
@@ -266,7 +298,7 @@ class _StatoSchermataChat extends State<SchermataChat> {
                     const Padding(
                       padding: EdgeInsets.only(top:10),
                       child: Text(
-                        "Chat With Documents",
+                        "Chat",
                         textAlign: TextAlign.center,
                         style: TextStyle(fontSize: FONTSIZE+5.0, fontWeight: FontWeight.bold),
                       ),
@@ -333,7 +365,7 @@ class _StatoSchermataChat extends State<SchermataChat> {
                           ),
                           const SizedBox(width: 10),
                           ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(primary: Colors.green),
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.green, shape: StadiumBorder()),
                             onPressed: () {
                               setState(() {
                                 _inviaEMostraRisposta(_controllerTesto.text);
@@ -344,7 +376,7 @@ class _StatoSchermataChat extends State<SchermataChat> {
                           ),
                           const SizedBox(width: 10),
                           ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(primary: Colors.red),
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, shape: StadiumBorder()),
                             onPressed: () {
                               setState(() {
                                 _messaggiChat.clear();
