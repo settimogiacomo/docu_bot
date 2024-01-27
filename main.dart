@@ -1,28 +1,11 @@
-
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:speech_to_text/speech_recognition_result.dart';
-import 'package:speech_to_text/speech_to_text.dart';
 
 import 'costanti.dart';
-import 'request.dart';
+import 'LabelDropDown.dart';
+import 'SchermataChat.dart';
+import 'ElencoFileCaricati.dart';
 
-
-class ElencoFileCaricati {
-  List<String> _fileCaricati = [];
-
-  void aggiungiFile(String nomeFile) {
-    _fileCaricati.add(nomeFile);
-  }
-
-  List<String> get elencoCompleto => _fileCaricati;
-  int get contaFileCaricati => _fileCaricati.length;
-}
-
-
-final TextEditingController _controllerTesto = TextEditingController(text: "");
-List<String> _messaggiChat = [];
 var _lingua = 'Italiano';
 var _nomeModello = 'google/flan-t5-xxl';
 
@@ -110,10 +93,18 @@ class _MyHomePageState extends State<MyHomePage> {
                         const SizedBox(width: 8),
                         Text('Carica', style: TextStyle(fontSize: FONTSIZE)),
                         const SizedBox(width: 8),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent, shape: StadiumBorder()),
-                          onPressed: _pickFile,
-                          child: const Text('Carica un file'),
+                        Container(
+                          height: 45.0,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.lightBlueAccent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(BORDER_RADIUS),
+                              ),
+                            ),
+                            onPressed: _pickFile,
+                            child: const Text('Carica un file'),
+                          ),
                         ),
                       ],
                     ),
@@ -126,7 +117,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             border: Border.all(color: Colors.black38),
-                            borderRadius: BorderRadius.circular(15),
+                            borderRadius: BorderRadius.circular(BORDER_RADIUS),
                           ),
                           child: ListView.builder(
                             itemCount: _elencoFileCaricati.contaFileCaricati,
@@ -165,321 +156,6 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class SchermataChat extends StatefulWidget {
-  @override
-  _StatoSchermataChat createState() => _StatoSchermataChat();
-}
-
-class _StatoSchermataChat extends State<SchermataChat> {
-  SpeechToText _speechToText = SpeechToText();
-  bool _speechEnabled = false;
-  bool _isListening = false;
-  String _ultimeParole = '';
-  FocusNode _focusTestoUtente = FocusNode();
-
-
-  void _initSpeech() async{
-    print("INIZIALIZZAZIONE");
-    _speechEnabled = await _speechToText.initialize();
-    print("speech enabled: " + _speechEnabled.toString());
-    setState(() {});
-  }
-
-  void _salvaParoleSpeech(SpeechRecognitionResult risultato){
-    print(risultato.recognizedWords);
-    _ultimeParole = risultato.recognizedWords;
-    setState(() {
-      _controllerTesto.value = TextEditingValue(
-        text: _ultimeParole,
-        selection: TextSelection.fromPosition(
-            TextPosition(offset: _ultimeParole.length)
-        ),
-      );
-    });
-  }
-  void _inizioAscolto() async {
-    if(!_speechEnabled){
-      _speechEnabled = await _speechToText.initialize();
-    }
-    _ultimeParole = '';
-    try {
-      await _speechToText.listen(
-          listenFor: const Duration(seconds: 60),
-          pauseFor: const Duration(seconds: 30),
-          cancelOnError: false,
-          partialResults: true,
-          listenMode: ListenMode.dictation,
-          onResult: _salvaParoleSpeech);
-    } catch(ex){
-      print(ex.toString());
-    }
-
-    setState(() {});
-  }
-  void _fineAscolto() async {
-    await _speechToText.stop();
-    _speechEnabled = false;
-    setState(() {});
-  }
-
-  void _gestisciMessaggioInviato(String messaggio) {
-    if (messaggio.isNotEmpty) {
-      //Invia messaggio all'Api
-      _inviaEMostraRisposta(messaggio);
-    }
-  }
-
-  Future<void> _inviaEMostraRisposta(String messaggio) async {
-    //Inserisce la domanda dell'utente nel quadrante
-    setState(() {
-      _messaggiChat.add(messaggio);
-      _controllerTesto.clear();
-    });
-    // Feedback immediato di risposta
-    setState(() {
-      _messaggiChat.add("...");
-    });
-
-    // Invia messaggio all'API
-    // Inserisce messaggio utente
-    final risposta  = await ottieniRisposta(messaggio);
-
-    // Aggiorna la chat con la risposta
-    setState(() {
-      _messaggiChat[_messaggiChat.length-1] = risposta;
-    });
-    _focusTestoUtente.requestFocus();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          color: Colors.black26,
-          child: Padding(
-            padding: const EdgeInsets.all(15),
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                height: MediaQuery.of(context).size.height - 30,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.only(top:10),
-                      child: Text(
-                        "Chat",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: FONTSIZE+5.0, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: _messaggiChat.length,
-                        itemBuilder: (context, index) {
-                          final isMessaggioUtente = index % 2 == 0;
-                          return ListTile(
-                            title: Align(
-                              alignment: isMessaggioUtente ? Alignment.topRight : Alignment.topLeft,
-                              child: Row(
-                                mainAxisAlignment: isMessaggioUtente ? MainAxisAlignment.end : MainAxisAlignment.start,
-                                children: [
-                                  // Usa l'icona dell'utente per il messaggio dell'utente
-                                  Visibility(
-                                    visible: !isMessaggioUtente,
-                                    child: Icon(BOT__ICON),
-                                  ),
-                                  SizedBox(width: 8), // Adjust the spacing between icon and text
-                                  Flexible(
-                                      child:
-                                      SelectableText(
-                                          _messaggiChat[index],
-                                          style: TextStyle(fontSize: FONTSIZE),
-                                        ),
-                                  ),
-                                  Visibility(
-                                    visible: isMessaggioUtente,
-                                    child: Icon(USER_ICON),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(bottom:10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          Expanded(
-                            flex: 2,
-                            child: Container(
-                              margin: const EdgeInsets.only(left: 10),
-                              child: TextField(
-                                focusNode: _focusTestoUtente,
-                                controller: _controllerTesto,
-                                decoration: InputDecoration(
-                                  hintText: "Scrivi una domanda",
-                                  fillColor: Colors.white,
-                                  filled: true,
-                                  border: OutlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.green),
-                                    borderRadius: BorderRadius.circular(15),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                                ),
-                                onSubmitted: _gestisciMessaggioInviato,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Container(
-                            height: 30.0,
-                            width: 80.0,
-                            decoration: BoxDecoration(
-                              color: Colors.lightBlueAccent,
-                                border: Border.all(
-                                  color: Colors.lightBlueAccent,
-                                ),
-                                borderRadius: BorderRadius.all(Radius.circular(15))
-                            ),
-                            child: TextButton(
-                              child: const Icon(Icons.mic),
-                              onPressed: () {
-                                setState(() {
-                                  print("State listening: " + _isListening.toString());
-                                  if(_isListening){
-                                    _fineAscolto();
-                                    _isListening = false;
-                                    print("chiuso ascolto");
-                                  } else {
-                                    print("aperto ascolto");
-                                    _inizioAscolto();
-                                    _isListening = true;
-                                  }
-                                });
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(backgroundColor: Colors.green, shape: StadiumBorder()),
-                            onPressed: () {
-                              setState(() {
-                                _inviaEMostraRisposta(_controllerTesto.text);
-                              });
-                            },
-                            icon: const Icon(Icons.send),
-                            label: const Text("Invia"),
-                          ),
-                          const SizedBox(width: 10),
-                          ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, shape: StadiumBorder()),
-                            onPressed: () {
-                              setState(() {
-                                _messaggiChat.clear();
-                                _controllerTesto.clear();
-                              });
-                            },
-                            icon: const Icon(Icons.delete),
-                            label: const Text("Svuota Chat"),
-                          ),
-                          const SizedBox(width: 10),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class LabelDropDown extends StatefulWidget {
-  final String etichetta;
-  final List<String> lista;
-  String valoreDefault;
-  final IconData icona;
-
-  LabelDropDown({
-    required this.etichetta,
-    required this.lista,
-    required this.valoreDefault,
-    required this.icona,
-  });
-
-  @override
-  _LabelDropDownState createState() => _LabelDropDownState();
-}
-
-class _LabelDropDownState extends State<LabelDropDown> {
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Row(
-          children: <Widget>[
-            Icon(widget.icona),
-            const SizedBox(width: 8),
-            Text(widget.etichetta, style: TextStyle(fontSize: FONTSIZE)),
-          ],
-        ),
-        const SizedBox(width: 5),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: Colors.black38, width: 1),
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(0.5),
-            child: Container(
-              width: 230,
-              child: DropdownButton<String>(
-                underline: Container(),
-                isDense: true,
-                value: widget.valoreDefault,
-                onChanged: (String? newValue) {
-                  setState(() {
-                    widget.valoreDefault = newValue!;
-                  });
-                },
-                isExpanded: true,
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontSize: FONTSIZE,
-                ),
-                items: widget.lista.map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Center(
-                      child: Text(value, style: TextStyle(fontSize: FONTSIZE)),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
