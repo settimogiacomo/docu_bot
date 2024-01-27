@@ -179,12 +179,13 @@ class _StatoSchermataChat extends State<SchermataChat> {
   bool _speechEnabled = false;
   bool _isListening = false;
   String _ultimeParole = '';
+  FocusNode _focusTestoUtente = FocusNode();
 
 
   void _initSpeech() async{
     print("INIZIALIZZAZIONE");
     _speechEnabled = await _speechToText.initialize();
-    print(_speechEnabled);
+    print("speech enabled: " + _speechEnabled.toString());
     setState(() {});
   }
 
@@ -205,10 +206,18 @@ class _StatoSchermataChat extends State<SchermataChat> {
       _speechEnabled = await _speechToText.initialize();
     }
     _ultimeParole = '';
-    await _speechToText.listen(
-        pauseFor: const Duration(seconds: 30),
-        cancelOnError: true,
-        onResult: _salvaParoleSpeech);
+    try {
+      await _speechToText.listen(
+          listenFor: const Duration(seconds: 60),
+          pauseFor: const Duration(seconds: 30),
+          cancelOnError: false,
+          partialResults: true,
+          listenMode: ListenMode.dictation,
+          onResult: _salvaParoleSpeech);
+    } catch(ex){
+      print(ex.toString());
+    }
+
     setState(() {});
   }
   void _fineAscolto() async {
@@ -243,6 +252,7 @@ class _StatoSchermataChat extends State<SchermataChat> {
     setState(() {
       _messaggiChat[_messaggiChat.length-1] = risposta;
     });
+    _focusTestoUtente.requestFocus();
   }
 
   @override
@@ -320,6 +330,7 @@ class _StatoSchermataChat extends State<SchermataChat> {
                             child: Container(
                               margin: const EdgeInsets.only(left: 10),
                               child: TextField(
+                                focusNode: _focusTestoUtente,
                                 controller: _controllerTesto,
                                 decoration: InputDecoration(
                                   hintText: "Scrivi una domanda",
@@ -336,22 +347,33 @@ class _StatoSchermataChat extends State<SchermataChat> {
                             ),
                           ),
                           const SizedBox(width: 10),
-                          ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(backgroundColor: Colors.lightBlueAccent, shape: StadiumBorder()),
-                            onPressed: () {
-                              setState(() {
-                                print("Starting: state listening  " + _isListening.toString());
-                                if(_isListening){
-                                  _fineAscolto();
-                                  _isListening = false;
-                                } else {
-                                  _inizioAscolto();
-                                  _isListening = true;
-                                }
-                              });
-                            },
-                            icon: const Icon(Icons.mic),
-                            label: const Text(""),
+                          Container(
+                            height: 30.0,
+                            width: 80.0,
+                            decoration: BoxDecoration(
+                              color: Colors.lightBlueAccent,
+                                border: Border.all(
+                                  color: Colors.lightBlueAccent,
+                                ),
+                                borderRadius: BorderRadius.all(Radius.circular(15))
+                            ),
+                            child: TextButton(
+                              child: const Icon(Icons.mic),
+                              onPressed: () {
+                                setState(() {
+                                  print("State listening: " + _isListening.toString());
+                                  if(_isListening){
+                                    _fineAscolto();
+                                    _isListening = false;
+                                    print("chiuso ascolto");
+                                  } else {
+                                    print("aperto ascolto");
+                                    _inizioAscolto();
+                                    _isListening = true;
+                                  }
+                                });
+                              },
+                            ),
                           ),
                           const SizedBox(width: 10),
                           ElevatedButton.icon(
