@@ -95,7 +95,7 @@ class _StatoSchermataChat extends State<SchermataChat> {
 
     // Invia messaggio all'API
     // Inserisce messaggio utente
-    final risposta  = await ottieniRisposta(messaggio);
+    final risposta  = await ottieniRispostaHTTP(messaggio);
 
     // Aggiorna la chat con la risposta
     setState(() {

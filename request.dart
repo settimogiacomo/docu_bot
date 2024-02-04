@@ -1,9 +1,11 @@
+import 'dart:typed_data';
+
 import 'costanti.dart';
 import 'dart:convert'; //json
 import 'package:http/http.dart' as http;
 
 
-Future<String> cambiaModello(newModel) async {
+Future<String> cambiaModelloHTTP(newModel) async {
   try {
     var url = Uri.parse('$SERVER/modello');
 
@@ -26,7 +28,7 @@ Future<String> cambiaModello(newModel) async {
   }
 }
 
-Future<String> cambiaLingua(newLanguage) async {
+Future<String> cambiaLinguaHTTP(newLanguage) async {
   try {
     var url = Uri.parse('$SERVER/lingua');
     print(url);
@@ -49,7 +51,7 @@ Future<String> cambiaLingua(newLanguage) async {
   }
 }
 
-Future<String> ottieniRisposta(String domanda) async {
+Future<String> ottieniRispostaHTTP(String domanda) async {
   try {
     //Uri url = Uri.parse('https://dummyjson.com/todos');//http://localhost:8080/question/$domanda'); // Sostituisci con l'URL del tuo server
     var url = Uri.parse('$SERVER/question');
@@ -69,5 +71,36 @@ Future<String> ottieniRisposta(String domanda) async {
     }
   } catch (e) {
     return 'Errore durante la richiesta HTTP: $e';
+  }
+}
+
+
+Future<bool> inviaDocumentoHTTP(Uint8List file, String nomeFile) async {
+  try {
+    // lettura file: lista di bytes
+    int lunghezza = file.length;
+    var url = Uri.parse('$SERVER/file/$nomeFile');
+    print(url);
+    http.Response response = await http.put(url, headers: {'Content-Type': 'text/plain', 'Content-Length': lunghezza.toString()}, body: file);
+
+    if (response.statusCode == 200) {
+      var decodedResponse = json.decode(response.body);
+      // Assume che la risposta JSON contenga un campo specifico, ad esempio "risposta"
+      final String risposta = decodedResponse['response'];
+      if (risposta.contains('esiste')){ // esiste già
+        print(risposta);
+        return false;
+      } else {
+        return true;
+      }
+      print(risposta);
+
+    } else {
+      print('Errore durante la richiesta di risposta. Codice: ${response.statusCode}');
+      return false;
+    }
+  } catch (e) {
+    print('Errore durante la richiesta HTTP: $e');
+    return false;
   }
 }
