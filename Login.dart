@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'MyHomePage.dart';
 
-void main() {
-  runApp(LoginPage());
-}
+// void main() {
+//   runApp(LoginPage());
+// }
 
 class LoginPage extends StatelessWidget {
   @override
@@ -38,9 +40,9 @@ class _LoginFormState extends State<LoginForm> {
 
   List<String> _users = ['Amministratore', 'Utente', 'Studente'];
   Map<String, String> _passwords = {
-    'Amministratore': 'admin_password',
-    'Utente': 'user_password',
-    'Studente': 'student_password'
+    'Amministratore': 'admin',
+    'Utente': 'user',
+    'Studente': 'student'
   };
 
   var _message = '';
@@ -53,16 +55,18 @@ class _LoginFormState extends State<LoginForm> {
     });
   }
 
-  void _login() {
+  Future<void> _login() async {
     String password = _passwords[_selectedUser] ?? '';
 
     if (_selectedPassword == password) {
       // Login successful
-      _updateMessage('Username e password corretti, stai per essere indirizzato alla pagina.', Colors.green);
+      _updateMessage('Credenziali corrette, stai per essere indirizzato alla pagina.', Colors.green);
+      await Future.delayed(const Duration(seconds: 2));
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => SchermataChat(username: _selectedUser),
+          builder: (context) => MyHomePage(title: 'DocuBot', username: _selectedUser),
+          //SchermataChat(username: _selectedUser),
         ),
       );
     } else {
@@ -169,20 +173,3 @@ class _LoginFormState extends State<LoginForm> {
   }
 }
 
-class SchermataChat extends StatelessWidget {
-  final String username;
-
-  SchermataChat({required this.username});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Schermata Chat'),
-      ),
-      body: Center(
-        child: Text('Benvenuto, $username'),
-      ),
-    );
-  }
-}
