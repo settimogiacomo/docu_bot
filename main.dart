@@ -44,17 +44,20 @@ class _MyHomePageState extends State<MyHomePage> {
   var _fileSelezionato = -1;
 
   void _pickFile() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles();
+    FilePickerResult? resultFile = await FilePicker.platform.pickFiles();
 
-    if (result != null) {
-      String nomeFile = result.files.single.name;
-      setState(() {
-        _elencoFileCaricati.aggiungiFile(nomeFile);
-      });
+    if (resultFile != null) {
+      bool aggiorna = await _elencoFileCaricati.aggiungiFile(resultFile);
+      if(aggiorna){
+        setState(() {
+          _hasContent = (_elencoFileCaricati.contaFileCaricati > 0);
+        });
+      }
     } else {
       // L'utente ha annullato la selezione del file
     }
-    _hasContent = (_elencoFileCaricati.contaFileCaricati > 0);
+
+
   }
 
   @override
