@@ -5,7 +5,50 @@ import 'dart:convert'; //json
 import 'package:http/http.dart' as http;
 
 
-Future<String> cambiaModelloHTTP(newModel) async {
+Future<bool> loginUtenteHTTP(String userName, String userPass) async {
+  try {
+    var url = Uri.parse('$SERVER/login');
+
+    Map data = {'usr' : userName, 'pwd': userPass};
+    var corpo = json.encode(data);
+    http.Response response = await http.post(url, headers: {'Content-Type': 'application/json'}, body: corpo);
+
+    if (response.statusCode == 200) {
+      var decodedResponse = json.decode(response.body);
+      bool risposta = decodedResponse['response'] == 'true';
+
+      return risposta;
+    } else {
+      print('Errore durante la richiesta di risposta. Codice: ${response.statusCode}');
+      return false;
+    }
+  } catch (e) {
+    print('Errore durante la richiesta HTTP: $e');
+    return false;
+  }
+}
+
+  Future<List<String>> contaFilesHTTP()  async {
+  try {
+    var url = Uri.parse('$SERVER/files');
+    http.Response response =  await http.get(url, headers: {'Content-Type': 'application/json'});
+
+    if (response.statusCode == 200) {
+      var decodedResponse = json.decode(response.body);
+      var risposta = List<String>.from(decodedResponse['response'] as List);
+
+      return risposta;
+    } else {
+      print('Errore durante la richiesta di risposta. Codice: ${response.statusCode}');
+      return [];
+    }
+  } catch (e) {
+    print('Errore durante la richiesta HTTP: $e');
+    return [];
+  }
+}
+
+Future<String> cambiaModelloHTTP(String newModel) async {
   try {
     var url = Uri.parse('$SERVER/modello');
 
@@ -28,7 +71,7 @@ Future<String> cambiaModelloHTTP(newModel) async {
   }
 }
 
-Future<String> cambiaLinguaHTTP(newLanguage) async {
+Future<String> cambiaLinguaHTTP(String newLanguage) async {
   try {
     var url = Uri.parse('$SERVER/lingua');
     print(url);

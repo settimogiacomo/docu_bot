@@ -2,8 +2,20 @@ import 'dart:typed_data';
 import 'package:docu_bot/request.dart';
 import 'package:file_picker/file_picker.dart';
 
+
 class ElencoFileCaricati {
-  List<String> _fileCaricati = [];
+  List<String> _fileCaricati = []; //contaFilesHTTP();
+
+  ElencoFileCaricati(){
+    _fileCaricati = [];
+  }
+
+  ElencoFileCaricati.withFiles(List<String> lista){
+    _fileCaricati = lista;
+  }
+
+  List<String> get elencoCompleto => _fileCaricati;
+  int get contaFileCaricati => _fileCaricati.length;
 
   Future<bool> aggiungiFile(FilePickerResult file) async {
 
@@ -26,6 +38,4 @@ class ElencoFileCaricati {
 
   }
 
-  List<String> get elencoCompleto => _fileCaricati;
-  int get contaFileCaricati => _fileCaricati.length;
 }

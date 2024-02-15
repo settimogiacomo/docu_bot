@@ -1,3 +1,4 @@
+import 'package:docu_bot/request.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
@@ -20,10 +21,24 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
-  final ElencoFileCaricati _elencoFileCaricati = ElencoFileCaricati();
   var _hasContent = false;
   var _fileSelezionato = -1;
+  ElencoFileCaricati _elencoFileCaricati = ElencoFileCaricati();
 
+  @override
+  void initState() {
+    super.initState();
+    contaFilesHTTP().then((value) => aggiornaElencoFiles(value));
+  }
+
+  void aggiornaElencoFiles(files){
+    setState(() {
+      _elencoFileCaricati = ElencoFileCaricati.withFiles(files);
+      _hasContent = (_elencoFileCaricati.contaFileCaricati > 0);
+    });
+  }
+
+  // click carica nuovo file
   void _pickFile() async {
     FilePickerResult? resultFile = await FilePicker.platform.pickFiles();
 
@@ -37,8 +52,6 @@ class _MyHomePageState extends State<MyHomePage> {
     } else {
       // L'utente ha annullato la selezione del file
     }
-
-
   }
 
   @override

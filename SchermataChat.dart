@@ -84,6 +84,7 @@ class _StatoSchermataChat extends State<SchermataChat> {
 
   Future<void> _inviaEMostraRisposta(String messaggio) async {
     //Inserisce la domanda dell'utente nel quadrante
+    messaggio = messaggio.trim();
     setState(() {
       _messaggiChat.add(messaggio);
       _controllerTesto.clear();
@@ -143,28 +144,43 @@ class _StatoSchermataChat extends State<SchermataChat> {
                           return ListTile(
                             title: Align(
                               alignment: isMessaggioUtente ? Alignment.topRight : Alignment.topLeft,
-                              child: Row(
+                              child:
+                              Container(
+                                padding: EdgeInsets.all(20.0),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(BORDER_RADIUS),
+                                  color: isMessaggioUtente ? Colors.grey[200] : Colors.grey[200],
+                                ),
+                                child: Row(
                                 mainAxisAlignment: isMessaggioUtente ? MainAxisAlignment.end : MainAxisAlignment.start,
                                 children: [
-                                  // Usa l'icona dell'utente per il messaggio dell'utente
-                                  Visibility(
-                                    visible: !isMessaggioUtente,
-                                    child: Icon(BOT__ICON),
-                                  ),
-                                  SizedBox(width: 8), // Adjust the spacing between icon and text
-                                  Flexible(
-                                    child:
-                                    SelectableText(
-                                      _messaggiChat[index],
-                                      style: TextStyle(fontSize: FONTSIZE),
+                                    // Usa l'icona dell'utente per il messaggio dell'utente
+                                    Visibility(
+                                      visible: isMessaggioUtente,
+                                      child: BTN_PLAY,
                                     ),
-                                  ),
-                                  Visibility(
-                                    visible: isMessaggioUtente,
-                                    child: Icon(USER_ICON),
-                                  ),
+                                    Visibility(
+                                      visible: !isMessaggioUtente,
+                                      child: const Icon(BOT__ICON),
+                                    ),
+                                    SizedBox(width: 8), // Adjust the spacing between icon and text
+                                    Flexible(
+                                      child:
+                                      SelectableText(
+                                        _messaggiChat[index],
+                                        style: const TextStyle(fontSize: FONTSIZE),
+                                      ),
+                                    ),
+                                    Visibility(
+                                      visible: isMessaggioUtente,
+                                      child: const Icon(USER_ICON),
+                                    ),
+                                    Visibility(
+                                      visible: !isMessaggioUtente,
+                                      child: BTN_PLAY,
+                                    ),
                                 ],
-                              ),
+                              ),),
                             ),
                           );
                         },
