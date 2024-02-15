@@ -1,10 +1,8 @@
 import 'costanti.dart';
 import 'package:flutter/material.dart';
-import 'package:speech_to_text/speech_recognition_result.dart';
-import 'package:speech_to_text/speech_to_text.dart';
-import 'request.dart';
-
-
+import 'Requests.dart';
+import 'ButtonSpeechToText.dart';
+import 'ButtonTextToSpeech.dart';
 
 class SchermataChat extends StatefulWidget {
   @override
@@ -14,65 +12,8 @@ class SchermataChat extends StatefulWidget {
 class _StatoSchermataChat extends State<SchermataChat> {
   List<String> _messaggiChat = [];
   TextEditingController _controllerTesto = TextEditingController(text: "");
-  SpeechToText _speechToText = SpeechToText();
-  bool _speechEnabled = false;
-  bool _isListening = false;
-  String _ultimeParole = '';
   FocusNode _focusTestoUtente = FocusNode();
-  Icon _iconaMicrofono =  Icon(Icons.mic_off_rounded);
   int? _numeroMaxLinee = null;
-
-
-  void _initSpeech() async{
-    print("INIZIALIZZAZIONE");
-    _speechEnabled = await _speechToText.initialize();
-    print("speech enabled: " + _speechEnabled.toString());
-    setState(() {});
-  }
-
-  void _salvaParoleSpeech(SpeechRecognitionResult risultato){
-    print(risultato.recognizedWords);
-    _ultimeParole = risultato.recognizedWords;
-    setState(() {
-      _controllerTesto.value = TextEditingValue(
-        text: _ultimeParole,
-        selection: TextSelection.fromPosition(
-            TextPosition(offset: _ultimeParole.length)
-        ),
-      );
-    });
-  }
-  void _inizioAscolto() async {
-    if(!_speechEnabled){
-      _speechEnabled = await _speechToText.initialize();
-    }
-    _ultimeParole = '';
-    try {
-      await _speechToText.listen(
-          listenFor: const Duration(seconds: 60),
-          pauseFor: const Duration(seconds: 30),
-          cancelOnError: false,
-          partialResults: true,
-          listenMode: ListenMode.dictation,
-          onResult: _salvaParoleSpeech);
-    } catch(ex){
-      print("ERRORE MICROFONO");
-      print(ex.toString());
-    }
-
-    setState(() {
-      _iconaMicrofono =  Icon(Icons.mic);
-    });
-  }
-  void _fineAscolto() async {
-    await _speechToText.stop();
-    _speechEnabled = false;
-    _focusTestoUtente.requestFocus();
-    setState(() {
-      _iconaMicrofono =  Icon(Icons.mic_off_rounded);
-    });
-  }
-
 
 
   void _gestisciMessaggioInviato(String messaggio) {
@@ -96,11 +37,11 @@ class _StatoSchermataChat extends State<SchermataChat> {
 
     // Invia messaggio all'API
     // Inserisce messaggio utente
-    final risposta  = await ottieniRispostaHTTP(messaggio);
+    final risposta = await ottieniRispostaPOST(messaggio);
 
     // Aggiorna la chat con la risposta
     setState(() {
-      _messaggiChat[_messaggiChat.length-1] = risposta;
+      _messaggiChat[_messaggiChat.length - 1] = risposta;
     });
     _focusTestoUtente.requestFocus();
   }
@@ -129,11 +70,13 @@ class _StatoSchermataChat extends State<SchermataChat> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Padding(
-                      padding: EdgeInsets.only(top:10),
+                      padding: EdgeInsets.only(top: 10),
                       child: Text(
                         "Chat",
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: FONTSIZE+5.0, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: FONTSIZE + 5.0,
+                            fontWeight: FontWeight.bold),
                       ),
                     ),
                     Expanded(
@@ -143,32 +86,39 @@ class _StatoSchermataChat extends State<SchermataChat> {
                           final isMessaggioUtente = index % 2 == 0;
                           return ListTile(
                             title: Align(
-                              alignment: isMessaggioUtente ? Alignment.topRight : Alignment.topLeft,
-                              child:
-                              Container(
+                              alignment: isMessaggioUtente
+                                  ? Alignment.topRight
+                                  : Alignment.topLeft,
+                              child: Container(
                                 padding: EdgeInsets.all(20.0),
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(BORDER_RADIUS),
-                                  color: isMessaggioUtente ? Colors.grey[200] : Colors.grey[200],
+                                  borderRadius:
+                                      BorderRadius.circular(BORDER_RADIUS),
+                                  color: isMessaggioUtente
+                                      ? Colors.grey[200]
+                                      : Colors.grey[200],
                                 ),
                                 child: Row(
-                                mainAxisAlignment: isMessaggioUtente ? MainAxisAlignment.end : MainAxisAlignment.start,
-                                children: [
+                                  mainAxisAlignment: isMessaggioUtente
+                                      ? MainAxisAlignment.end
+                                      : MainAxisAlignment.start,
+                                  children: [
                                     // Usa l'icona dell'utente per il messaggio dell'utente
                                     Visibility(
                                       visible: isMessaggioUtente,
-                                      child: BTN_PLAY,
+                                      child: ButtonTextToSpeech(testoDaLeggere: _messaggiChat[index],),
                                     ),
                                     Visibility(
                                       visible: !isMessaggioUtente,
                                       child: const Icon(BOT__ICON),
                                     ),
-                                    SizedBox(width: 8), // Adjust the spacing between icon and text
+                                    const SizedBox(
+                                        width:8), // Adjust the spacing between icon and text
                                     Flexible(
-                                      child:
-                                      SelectableText(
+                                      child: SelectableText(
                                         _messaggiChat[index],
-                                        style: const TextStyle(fontSize: FONTSIZE),
+                                        style:
+                                            const TextStyle(fontSize: FONTSIZE),
                                       ),
                                     ),
                                     Visibility(
@@ -177,17 +127,18 @@ class _StatoSchermataChat extends State<SchermataChat> {
                                     ),
                                     Visibility(
                                       visible: !isMessaggioUtente,
-                                      child: BTN_PLAY,
+                                      child: ButtonTextToSpeech(testoDaLeggere: _messaggiChat[index],),
                                     ),
-                                ],
-                              ),),
+                                  ],
+                                ),
+                              ),
                             ),
                           );
                         },
                       ),
                     ),
                     Padding(
-                      padding: EdgeInsets.only(bottom:10),
+                      padding: EdgeInsets.only(bottom: 10),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
@@ -196,7 +147,8 @@ class _StatoSchermataChat extends State<SchermataChat> {
                             child: Container(
                               margin: const EdgeInsets.only(left: 10),
                               child: Container(
-                                constraints: const BoxConstraints(maxHeight: 200),
+                                constraints:
+                                    const BoxConstraints(maxHeight: 200),
                                 child: TextField(
                                   maxLines: _numeroMaxLinee,
                                   focusNode: _focusTestoUtente,
@@ -206,47 +158,23 @@ class _StatoSchermataChat extends State<SchermataChat> {
                                     fillColor: Colors.white,
                                     filled: true,
                                     border: OutlineInputBorder(
-                                      borderSide: BorderSide(color: Colors.white),
-                                      borderRadius: BorderRadius.circular(BORDER_RADIUS),
+                                      borderSide:
+                                          BorderSide(color: Colors.white),
+                                      borderRadius:
+                                          BorderRadius.circular(BORDER_RADIUS),
                                     ),
-                                    contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        vertical: 10, horizontal: 10),
                                   ),
                                   onSubmitted: _gestisciMessaggioInviato,
                                 ),
                               ),
-
                             ),
                           ),
                           const SizedBox(width: 10),
-                          Container(
-                            height: 45.0,
-                            width: 80.0,
-                            decoration: BoxDecoration(
-                                color: Colors.lightBlueAccent,
-                                border: Border.all(
-                                  color: Colors.lightBlueAccent,
-                                ),
-                                borderRadius: BorderRadius.all(Radius.circular(BORDER_RADIUS))
-                            ),
-                            child: TextButton(
-                              style: ButtonStyle(iconColor: MaterialStateProperty.all(Colors.white)),
-                              child: _iconaMicrofono,
-                              onPressed: () {
-                                setState(() {
-                                  print("State listening: " + _isListening.toString());
-                                  if(_isListening){
-                                    _fineAscolto();
-                                    _isListening = false;
-                                    print("chiuso ascolto");
-                                  } else {
-                                    print("aperto ascolto");
-                                    _inizioAscolto();
-                                    _isListening = true;
-                                  }
-                                });
-                              },
-                            ),
-                          ),
+                          ButtonSpeechToText(
+                            controllerTextBoxParent: _controllerTesto,
+                            focusTextBoxParent: _focusTestoUtente),
                           const SizedBox(width: 10),
                           Container(
                             height: 45.0,
@@ -254,7 +182,8 @@ class _StatoSchermataChat extends State<SchermataChat> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.lightGreen,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(BORDER_RADIUS),
+                                  borderRadius:
+                                      BorderRadius.circular(BORDER_RADIUS),
                                 ),
                               ),
                               onPressed: () {
@@ -271,10 +200,11 @@ class _StatoSchermataChat extends State<SchermataChat> {
                             height: 45.0,
                             child: ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.redAccent,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(BORDER_RADIUS),
-                                  ),
+                                backgroundColor: Colors.redAccent,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(BORDER_RADIUS),
+                                ),
                               ),
                               onPressed: () {
                                 setState(() {

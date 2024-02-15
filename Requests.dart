@@ -5,7 +5,7 @@ import 'dart:convert'; //json
 import 'package:http/http.dart' as http;
 
 
-Future<bool> loginUtenteHTTP(String userName, String userPass) async {
+Future<bool> loginUtentePOST(String userName, String userPass) async {
   try {
     var url = Uri.parse('$SERVER/login');
 
@@ -28,7 +28,7 @@ Future<bool> loginUtenteHTTP(String userName, String userPass) async {
   }
 }
 
-  Future<List<String>> contaFilesHTTP()  async {
+  Future<List<String>> contaFilesGET()  async {
   try {
     var url = Uri.parse('$SERVER/files');
     http.Response response =  await http.get(url, headers: {'Content-Type': 'application/json'});
@@ -48,7 +48,7 @@ Future<bool> loginUtenteHTTP(String userName, String userPass) async {
   }
 }
 
-Future<String> cambiaModelloHTTP(String newModel) async {
+Future<String> cambiaModelloPOST(String newModel) async {
   try {
     var url = Uri.parse('$SERVER/modello');
 
@@ -71,7 +71,7 @@ Future<String> cambiaModelloHTTP(String newModel) async {
   }
 }
 
-Future<String> cambiaLinguaHTTP(String newLanguage) async {
+Future<String> cambiaLinguaPOST(String newLanguage) async {
   try {
     var url = Uri.parse('$SERVER/lingua');
     print(url);
@@ -94,7 +94,7 @@ Future<String> cambiaLinguaHTTP(String newLanguage) async {
   }
 }
 
-Future<String> ottieniRispostaHTTP(String domanda) async {
+Future<String> ottieniRispostaPOST(String domanda) async {
   try {
     //Uri url = Uri.parse('https://dummyjson.com/todos');//http://localhost:8080/question/$domanda'); // Sostituisci con l'URL del tuo server
     var url = Uri.parse('$SERVER/question');
@@ -118,7 +118,7 @@ Future<String> ottieniRispostaHTTP(String domanda) async {
 }
 
 
-Future<bool> inviaDocumentoHTTP(Uint8List file, String nomeFile) async {
+Future<bool> inviaDocumentoPUT(Uint8List file, String nomeFile) async {
   try {
     // lettura file: lista di bytes
     int lunghezza = file.length;

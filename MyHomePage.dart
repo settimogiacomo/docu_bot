@@ -1,4 +1,4 @@
-import 'package:docu_bot/request.dart';
+import 'package:docu_bot/Requests.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
@@ -28,10 +28,10 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    contaFilesHTTP().then((value) => aggiornaElencoFiles(value));
+    contaFilesGET().then((value) => _aggiornaElencoFiles(value));
   }
 
-  void aggiornaElencoFiles(files){
+  void _aggiornaElencoFiles(files){
     setState(() {
       _elencoFileCaricati = ElencoFileCaricati.withFiles(files);
       _hasContent = (_elencoFileCaricati.contaFileCaricati > 0);
@@ -43,7 +43,7 @@ class _MyHomePageState extends State<MyHomePage> {
     FilePickerResult? resultFile = await FilePicker.platform.pickFiles();
 
     if (resultFile != null) {
-      bool aggiorna = await _elencoFileCaricati.aggiungiFile(resultFile);
+      bool aggiorna = await _elencoFileCaricati.salvaFile(resultFile);
       if(aggiorna){
         setState(() {
           _hasContent = (_elencoFileCaricati.contaFileCaricati > 0);

@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:docu_bot/request.dart';
+import 'package:docu_bot/Requests.dart';
 import 'package:flutter/material.dart';
 import 'MyHomePage.dart';
 import 'costanti.dart';
@@ -55,7 +55,7 @@ class _LoginFormState extends State<LoginForm> {
     _selectedUser = _selectedUser.trim();
     _selectedPassword = _selectedPassword.trim();
     if (_selectedPassword != '' && _selectedUser != ''){
-      Future<bool> risposta = loginUtenteHTTP(_selectedUser,_selectedPassword);
+      Future<bool> risposta = loginUtentePOST(_selectedUser,_selectedPassword);
       if (await risposta){
         _updateMessage('Credenziali corrette, stai per essere indirizzato alla pagina.', Colors.green);
 

@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'package:docu_bot/request.dart';
+import 'package:docu_bot/Requests.dart';
 import 'package:file_picker/file_picker.dart';
 
 
@@ -17,13 +17,13 @@ class ElencoFileCaricati {
   List<String> get elencoCompleto => _fileCaricati;
   int get contaFileCaricati => _fileCaricati.length;
 
-  Future<bool> aggiungiFile(FilePickerResult file) async {
+  Future<bool> salvaFile(FilePickerResult file) async {
 
     try{
       String nomeFile = file.files.single.name;
       Uint8List? contentFile = file.files.single.bytes;
 
-      bool resultHTTP = await inviaDocumentoHTTP(contentFile!, nomeFile);
+      bool resultHTTP = await inviaDocumentoPUT(contentFile!, nomeFile);
       if (resultHTTP){
         _fileCaricati.add(nomeFile);
         return true;
