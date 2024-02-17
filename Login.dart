@@ -36,7 +36,7 @@ class LoginForm extends StatefulWidget {
 }
 
 class _LoginFormState extends State<LoginForm> {
-  String _selectedUser = 'Amministratore';
+  String _selectedUser = 'Studente';
   String _selectedPassword = '';
 
   List<String> _users = ['Amministratore', 'Utente', 'Studente'];
@@ -143,7 +143,7 @@ class _LoginFormState extends State<LoginForm> {
                   labelText: 'Password',
                   border: OutlineInputBorder(
                     borderSide: BorderSide(color: Colors.white),
-                    borderRadius: BorderRadius.circular(BORDER_RADIUS)
+                    borderRadius: BorderRadius.circular(BORDER_RADIUS),
                   ),
                   filled: true, // Imposta il campo come riempito
                   fillColor: Colors.white, // Imposta il colore di riempimento
