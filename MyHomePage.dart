@@ -5,10 +5,9 @@ import 'package:flutter/material.dart';
 import 'costanti.dart';
 import 'LabelDropDown.dart';
 import 'SchermataChat.dart';
-import 'ElencoFileCaricati.dart';
 
 var _lingua = 'Italiano';
-var _nomeModello = 'google/flan-t5-xxl';
+var _nomeModello = 'Zephyr-7b-beta';
 
 class MyHomePage extends StatefulWidget {
   final String username;
@@ -92,7 +91,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         children: [
                           LabelDropDown(
                             etichetta: "Lingua",
-                            lista: <String>[
+                            lista: const <String>[
                               "Italiano",
                               "Inglese",
                               "Spagnolo",
@@ -109,9 +108,9 @@ class _MyHomePageState extends State<MyHomePage> {
                         children: [
                           LabelDropDown(
                             etichetta: "Modello",
-                            lista: <String>[
+                            lista: const <String>[
+                              "Zephyr-7b-beta",
                               "google/flan-t5-xxl",
-                              "google/flan-t5-large",
                               "tiiuae/falcon-7b-instruct"
                             ],
                             valoreDefault: _nomeModello,
